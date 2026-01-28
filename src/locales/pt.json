@@ -1,0 +1,24 @@
+{
+  "title": "Arte Realista Personalizada",
+  "subtitle": "Arte feita à mão com exclusividade para você",
+
+  "about": "Sobre a Artista",
+  "aboutText": "Sou uma artista profissional especializada em desenhos realistas personalizados. Transformo suas ideias, fotos e histórias em obras únicas, feitas à mão com emoção e riqueza de detalhes.",
+
+  "contact": "Encomendas",
+  "contactSubtitle": "Solicite uma arte personalizada",
+
+  "name": "Nome",
+  "email": "E-mail",
+  "message": "Descreva sua ideia",
+  "send": "Solicitar Arte",
+
+  "categories": {
+    "all": "Todas",
+    "portraits": "Retratos",
+    "pets": "Pets",
+    "realism": "Realismo"
+  },
+
+  "followOnInstagram": "Veja mais no Instagram →"
+}

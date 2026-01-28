@@ -1,0 +1,23 @@
+{
+  "title": "Arte Realista Personalizado",
+  "subtitle": "Obras dibujadas a mano creadas exclusivamente para ti",
+
+  "about": "Sobre la Artista",
+  "aboutText": "Soy una artista profesional especializada en dibujos realistas personalizados. Transformo tus ideas, fotos e historias en obras únicas hechas a mano, con emoción y gran nivel de detalle.",
+
+  "contact": "Encargos",
+  "contactSubtitle": "Solicita una obra personalizada",
+
+  "name": "Nombre",
+  "email": "Correo electrónico",
+  "message": "Describe tu idea",
+  "send": "Solicitar Obra",
+
+  "categories": {
+    "all": "Todas",
+    "portraits": "Retratos",
+    "pets": "Mascotas",
+    "realism": "Realismo"
+  },
+  "followOnInstagram": "Ver más en Instagram →"
+}

@@ -1,0 +1,24 @@
+{
+  "title": "Custom Realistic Art",
+  "subtitle": "Luxury hand-drawn artwork created exclusively for you",
+
+  "about": "About the Artist",
+  "aboutText": "I am a professional artist specializing in custom realistic drawings. I transform your ideas, photos, and stories into unique, hand-crafted artworks with emotion and detail.",
+
+  "contact": "Commission",
+  "contactSubtitle": "Request a custom artwork",
+
+  "name": "Name",
+  "email": "Email",
+  "message": "Describe your idea",
+  "send": "Request Artwork",
+
+  "categories": {
+    "all": "All",
+    "portraits": "Portraits",
+    "pets": "Pets",
+    "realism": "Realism"
+  },
+
+  "followOnInstagram": "See more on Instagram →"
+}
