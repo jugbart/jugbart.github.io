@@ -14,12 +14,21 @@ export default function Navbar() {
       <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* Logo */}
         <Link
-          to="/"
-          className="text-2xl font-display"
-          onClick={() => setOpen(false)}
+        to="/"
+        className="flex items-center gap-3"
+        onClick={() => setOpen(false)}
         >
-          Jugb Art
+            <img
+                src="/logo.svg"
+                alt="Jugb Art logo"
+                className="w-8 h-8"
+            />
+            <span className="text-xl md:text-2xl font-display">
+                Jugb Art
+            </span>
         </Link>
+
+
 
         {/* Desktop menu */}
         <div className="hidden md:flex gap-6 items-center text-sm">

@@ -1,0 +1,38 @@
+<svg
+  viewBox="0 0 120 120"
+  width="64"
+  height="64"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <circle
+    cx="60"
+    cy="60"
+    r="52"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    opacity="0.9"
+  />
+
+  <path
+    d="M72 32
+       v36
+       c0 12-6 18-20 18
+       c-8 0-14-4-14-10"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <path
+    d="M34 86
+       q6 6 18 6"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    opacity="0.6"
+  />
+</svg>
