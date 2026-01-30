@@ -12,6 +12,8 @@
   "email": "Email",
   "message": "Describe your idea",
   "send": "Request Artwork",
+  "sending": "Sending...",
+  "messageSent": "Request sent successfully!",
 
   "categories": {
     "all": "All",

@@ -12,6 +12,8 @@
   "email": "E-mail",
   "message": "Descreva sua ideia",
   "send": "Solicitar Arte",
+  "sending": "Enviando...",
+  "messageSent": "Solicitação enviada com sucesso!",
 
   "categories": {
     "all": "Todas",

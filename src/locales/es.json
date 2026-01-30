@@ -12,6 +12,8 @@
   "email": "Correo electrónico",
   "message": "Describe tu idea",
   "send": "Solicitar Obra",
+  "sending": "Enviando...",
+  "messageSent": "¡Solicitud enviada con éxito!",
 
   "categories": {
     "all": "Todas",
