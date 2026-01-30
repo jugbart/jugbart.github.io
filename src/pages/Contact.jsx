@@ -162,6 +162,25 @@ export default function Contact() {
     }
     hiddenNames.value = attachmentNames
 
+    // set a per-submission order id (simple client-side counter stored in localStorage)
+    try {
+      const prev = Number(localStorage.getItem('orderCounter') || 0)
+      const next = prev + 1
+      localStorage.setItem('orderCounter', String(next))
+      let orderInput = form.querySelector('input[name="order_id"]')
+      if (!orderInput) {
+        orderInput = document.createElement('input')
+        orderInput.type = 'hidden'
+        orderInput.name = 'order_id'
+        form.appendChild(orderInput)
+      }
+      // format: ORD-000001
+      orderInput.value = `ORD-${String(next).padStart(6, '0')}`
+    } catch (e) {
+      // localStorage may be unavailable; ignore silently
+      console.warn('Could not set orderCounter', e)
+    }
+
     // optionally set recipient if provided via env var
     const recipient = import.meta.env.VITE_CONTACT_RECIPIENT
     if (recipient) {
