@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import emailjs from '@emailjs/browser'
 // Use Cloudinary unsigned uploads as the default free solution
 
@@ -18,6 +18,16 @@ export default function Contact() {
     setToast({ message, type })
     setTimeout(() => setToast(null), duration)
   }
+
+  // Order SKU preview (random SKU per submission)
+  const generateSKU = (prefix = 'SKU') => {
+    // produce a short, readable SKU: PREFIX-<base36 time>-<6 char rand>
+    const timePart = Date.now().toString(36).toUpperCase().slice(-4)
+    const randPart = Math.random().toString(36).substring(2, 8).toUpperCase()
+    return `${prefix}-${timePart}-${randPart}`
+  }
+
+  const [skuPreview, setSkuPreview] = useState(() => generateSKU('ORD'))
 
   // Upload state and progress map
   const [uploading, setUploading] = useState(false)
@@ -107,6 +117,23 @@ export default function Contact() {
 
     const form = formRef.current
 
+    // set a per-submission random SKU (client-generated)
+    const submissionSKU = generateSKU('ORD')
+    try {
+      let orderInput = form.querySelector('input[name="order_id"]')
+      if (!orderInput) {
+        orderInput = document.createElement('input')
+        orderInput.type = 'hidden'
+        orderInput.name = 'order_id'
+        form.appendChild(orderInput)
+      }
+      orderInput.value = submissionSKU
+      // show the SKU in the preview (this is the SKU that will appear in the email)
+      setSkuPreview(submissionSKU)
+    } catch (e) {
+      // silently ignore SKU generation failure
+    }
+
     // If files selected, upload to cloud (prefer Firebase if configured, otherwise Cloudinary)
     let uploadedUrls = []
     if (selectedFiles.length > 0) {
@@ -117,7 +144,7 @@ export default function Contact() {
           selectedFiles.map((f, i) => uploadToCloudinary(f, i))
         )
 
-        // attach file URLs to the form as a hidden input
+            // attach file URLs to the form as a hidden input
         let urlsInput = form.querySelector('input[name="file_urls"]')
         if (!urlsInput) {
           urlsInput = document.createElement('input')
@@ -137,10 +164,22 @@ export default function Contact() {
         }
         urlsHtmlInput.value = `<ul>${uploadedUrls.map((u) => `<li><a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a></li>`).join('')}</ul>`
 
+        // ensure order_id still present after uploads (safety)
+        let orderInput = form.querySelector('input[name="order_id"]')
+        if (!orderInput || !orderInput.value) {
+          if (!orderInput) {
+            orderInput = document.createElement('input')
+            orderInput.type = 'hidden'
+            orderInput.name = 'order_id'
+            form.appendChild(orderInput)
+          }
+          orderInput.value = submissionSKU
+          setSkuPreview(submissionSKU)
+        }
+
         // clear the file input so sendForm won't try to send raw files
         if (fileInputRef.current) fileInputRef.current.value = ''
       } catch (err) {
-        console.error('Upload failed', err)
         const msg = 'File upload failed. Try again or use smaller files.'
         setError(msg)
         showToast(msg, 'error')
@@ -162,24 +201,7 @@ export default function Contact() {
     }
     hiddenNames.value = attachmentNames
 
-    // set a per-submission order id (simple client-side counter stored in localStorage)
-    try {
-      const prev = Number(localStorage.getItem('orderCounter') || 0)
-      const next = prev + 1
-      localStorage.setItem('orderCounter', String(next))
-      let orderInput = form.querySelector('input[name="order_id"]')
-      if (!orderInput) {
-        orderInput = document.createElement('input')
-        orderInput.type = 'hidden'
-        orderInput.name = 'order_id'
-        form.appendChild(orderInput)
-      }
-      // format: ORD-000001
-      orderInput.value = `ORD-${String(next).padStart(6, '0')}`
-    } catch (e) {
-      // localStorage may be unavailable; ignore silently
-      console.warn('Could not set orderCounter', e)
-    }
+
 
     // optionally set recipient if provided via env var
     const recipient = import.meta.env.VITE_CONTACT_RECIPIENT
@@ -229,7 +251,6 @@ export default function Contact() {
         setError(null)
       })
       .catch((err) => {
-        console.error(err)
         setSending(false)
         // EmailJS often returns an object with `.text` when the request is rejected
         const errText = (err && (err.text || err.message)) || 'Failed to send message. Please try again later.'
@@ -246,7 +267,12 @@ export default function Contact() {
 
   return (
     <main className="max-w-xl mx-auto px-6 py-24">
-      <h2 className="text-4xl mb-8">{t('contact')}</h2>
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <h2 className="text-4xl">{t('contact')}</h2>
+        {skuPreview && (
+          <div className="text-sm text-muted-foreground">Order ID: <span className="font-medium">{skuPreview}</span></div>
+        )}
+      </div>
 
       {toast && (
         <div

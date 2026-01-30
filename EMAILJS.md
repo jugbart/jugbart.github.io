@@ -28,6 +28,7 @@ VITE_CONTACT_RECIPIENT=artist@example.com
 
 Notes
 - The contact form enforces a 10 MB total attachment limit.
+- Each submission receives a client-generated random SKU accessible in templates as `{{order_id}}`. The SKU is generated per submission and **is not persisted** (no localStorage or server-side counter).
 - EmailJS has a limit on the total size of template variables (≈50 KB). Attachments are sent as multipart data, but they may be counted toward total request size when encoded — for example, a binary file becomes larger when base64-encoded (roughly 4/3 the original size).
 
 Workarounds if you hit the 50 KB limit:
