@@ -36,3 +36,19 @@ Workarounds if you hit the 50 KB limit:
 - Move sending to a server endpoint that can handle larger payloads and send the email server-side.
 - Add client-side checks to estimate total size (the app already warns when total variables exceed 50 KB) and refuse to send.
 
+Cloudinary quick setup (unsigned upload from browser):
+
+1. Create an unsigned upload preset in your Cloudinary account and note the preset name.
+2. Add these environment variables to your `.env`:
+
+```env
+VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
+VITE_CLOUDINARY_UPLOAD_PRESET=your_unsigned_preset
+```
+
+3. The contact form will upload selected files to Cloudinary and include the generated URLs in the email as `{{file_urls}}`.
+
+Notes & security:
+- Cloudinary has a free tier and supports unsigned uploads for quick client-side setups. For production, consider signed uploads via a small server endpoint to avoid exposing unsigned presets that could be abused.
+- If you want a fully server-side solution, I can implement S3 presigned uploads or a small server endpoint that handles attachments and forwards emails (more secure for private uploads).
+

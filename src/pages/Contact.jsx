@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useRef, useState } from 'react'
 import emailjs from '@emailjs/browser'
+// Use Cloudinary unsigned uploads as the default free solution
 
 export default function Contact() {
   const { t } = useTranslation()
@@ -18,7 +19,53 @@ export default function Contact() {
     setTimeout(() => setToast(null), duration)
   }
 
+  // Upload state and progress map
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState({}) // { idx: percent }
+
   const MAX_TOTAL_SIZE = 10 * 1024 * 1024 // 10 MB
+
+  // Helpers: Cloudinary upload (unsigned) and Firebase upload wrapper
+  async function uploadToCloudinary(file, idx) {
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+    if (!cloudName || !uploadPreset) throw new Error('Cloudinary not configured')
+
+    const url = `https://api.cloudinary.com/v1_1/${cloudName}/upload`
+
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('upload_preset', uploadPreset)
+
+      xhr.open('POST', url)
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100)
+          setUploadProgress((p) => ({ ...p, [idx]: percent }))
+        }
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const json = JSON.parse(xhr.responseText)
+            resolve(json.secure_url || json.url)
+          } catch (err) {
+            reject(new Error('Invalid response from Cloudinary'))
+          }
+        } else {
+          reject(new Error(`Cloudinary upload failed with status ${xhr.status}`))
+        }
+      }
+
+      xhr.onerror = () => reject(new Error('Network error during upload'))
+
+      xhr.send(fd)
+    })
+  }
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files)
@@ -44,9 +91,9 @@ export default function Contact() {
     setSelectedFiles(Array.from(dt.files))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (sending) return
+    if (sending || uploading) return
     setError(null)
 
     const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
@@ -58,8 +105,42 @@ export default function Contact() {
       return
     }
 
-    // attach a hidden field with comma-separated attachment names (useful in the email body)
     const form = formRef.current
+
+    // If files selected, upload to cloud (prefer Firebase if configured, otherwise Cloudinary)
+    let uploadedUrls = []
+    if (selectedFiles.length > 0) {
+      setUploading(true)
+      setUploadProgress({})
+      try {
+        uploadedUrls = await Promise.all(
+          selectedFiles.map((f, i) => uploadToCloudinary(f, i))
+        )
+
+        // attach file URLs to the form as a hidden input
+        let urlsInput = form.querySelector('input[name="file_urls"]')
+        if (!urlsInput) {
+          urlsInput = document.createElement('input')
+          urlsInput.type = 'hidden'
+          urlsInput.name = 'file_urls'
+          form.appendChild(urlsInput)
+        }
+        urlsInput.value = uploadedUrls.join(', ')
+
+        // clear the file input so sendForm won't try to send raw files
+        if (fileInputRef.current) fileInputRef.current.value = ''
+      } catch (err) {
+        console.error('Upload failed', err)
+        const msg = 'File upload failed. Try again or use smaller files.'
+        setError(msg)
+        showToast(msg, 'error')
+        setUploading(false)
+        return
+      }
+      setUploading(false)
+    }
+
+    // attach a hidden field with comma-separated attachment names (useful in the email body)
     const attachmentNames = selectedFiles.map((f) => f.name).join(', ')
 
     let hiddenNames = form.querySelector('input[name="attachment_names"]')
@@ -85,8 +166,21 @@ export default function Contact() {
     }
 
     // Estimate total size of variables to avoid EmailJS template variable limits (~50KB)
-    // For files, estimate base64-encoded size (roughly 4/3 of binary size)
+    // For files, we now send URLs (smaller) so this helps ensure variables remain under the limit
     const fd = new FormData(form)
+    // DEBUG: list form data entries to help inspect payload (remove in production)
+    try {
+      for (const [k, v] of fd.entries()) {
+        if (v instanceof File) {
+          console.log('[FormData] entry:', k, 'File:', v.name, v.type, v.size)
+        } else {
+          console.log('[FormData] entry:', k, String(v).slice(0, 200))
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to inspect FormData entries', err)
+    }
+
     let totalBytes = 0
     for (const [k, v] of fd.entries()) {
       if (v instanceof File) {
@@ -114,6 +208,7 @@ export default function Contact() {
         showToast(t('messageSent') || 'Message sent successfully!', 'success')
         form.reset()
         setSelectedFiles([])
+        setUploadProgress({})
         setError(null)
       })
       .catch((err) => {
@@ -209,6 +304,8 @@ export default function Contact() {
                   {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} • {Math.round(selectedFiles.reduce((acc, f) => acc + f.size, 0) / 1024)} KB
                 </span>
               )}
+
+              {uploading && <span className="ml-3 text-xs text-foreground">Uploading files…</span>}
             </div>
 
             {selectedFiles.length > 0 && (
@@ -237,6 +334,21 @@ export default function Contact() {
                 <div className="truncate">
                   <div className="font-medium">{f.name}</div>
                   <div className="text-xs text-muted-foreground">{Math.round(f.size / 1024)} KB</div>
+                  {uploadProgress[i] != null && (
+                    <div className="mt-2">
+                      <div
+                        role="progressbar"
+                        aria-label={`Upload progress ${uploadProgress[i]}%`}
+                        aria-valuenow={uploadProgress[i]}
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        className="h-2 w-full bg-muted/40 rounded overflow-hidden"
+                      >
+                        <div className="h-full bg-foreground transition-all" style={{ width: `${uploadProgress[i]}%` }} />
+                      </div>
+                      <span className="sr-only">{uploadProgress[i]}% uploaded</span>
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -255,10 +367,10 @@ export default function Contact() {
 
         <button
           type="submit"
-          disabled={sending}
+          disabled={sending || uploading}
           className="mt-6 border px-6 py-3 hover:bg-foreground hover:text-background transition disabled:opacity-60"
         >
-          {sending ? (t('sending') || 'Sending...') : t('send')}
+          {sending || uploading ? (t('sending') || 'Sending...') : t('send')}
         </button>
       </form>
     </main>
