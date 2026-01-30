@@ -84,6 +84,27 @@ export default function Contact() {
       toInput.value = recipient
     }
 
+    // Estimate total size of variables to avoid EmailJS template variable limits (~50KB)
+    // For files, estimate base64-encoded size (roughly 4/3 of binary size)
+    const fd = new FormData(form)
+    let totalBytes = 0
+    for (const [k, v] of fd.entries()) {
+      if (v instanceof File) {
+        const fileSize = v.size || 0
+        totalBytes += Math.ceil(fileSize / 3) * 4
+      } else {
+        totalBytes += new TextEncoder().encode(String(v)).length
+      }
+    }
+
+    const MAX_VARS_BYTES = 50 * 1024
+    if (totalBytes > MAX_VARS_BYTES) {
+      const msg = 'Total message size exceeds the 50 KB variables limit. Try smaller attachments, shorten text, or upload files and send links.'
+      setError(msg)
+      showToast(msg, 'error')
+      return
+    }
+
     setSending(true)
     emailjs
       .sendForm(serviceId, templateId, form, publicKey)
