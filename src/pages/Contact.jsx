@@ -197,18 +197,6 @@ export default function Contact() {
     // Estimate total size of variables to avoid EmailJS template variable limits (~50KB)
     // For files, we now send URLs (smaller) so this helps ensure variables remain under the limit
     const fd = new FormData(form)
-    // DEBUG: list form data entries to help inspect payload (remove in production)
-    try {
-      for (const [k, v] of fd.entries()) {
-        if (v instanceof File) {
-          console.log('[FormData] entry:', k, 'File:', v.name, v.type, v.size)
-        } else {
-          console.log('[FormData] entry:', k, String(v).slice(0, 200))
-        }
-      }
-    } catch (err) {
-      console.warn('Failed to inspect FormData entries', err)
-    }
 
     let totalBytes = 0
     for (const [k, v] of fd.entries()) {
