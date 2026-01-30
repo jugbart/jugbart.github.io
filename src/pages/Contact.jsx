@@ -127,6 +127,16 @@ export default function Contact() {
         }
         urlsInput.value = uploadedUrls.join(', ')
 
+        // Also add an HTML-friendly list of links that can be injected in the EmailJS template as {{{file_urls_html}}}
+        let urlsHtmlInput = form.querySelector('input[name="file_urls_html"]')
+        if (!urlsHtmlInput) {
+          urlsHtmlInput = document.createElement('input')
+          urlsHtmlInput.type = 'hidden'
+          urlsHtmlInput.name = 'file_urls_html'
+          form.appendChild(urlsHtmlInput)
+        }
+        urlsHtmlInput.value = `<ul>${uploadedUrls.map((u) => `<li><a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a></li>`).join('')}</ul>`
+
         // clear the file input so sendForm won't try to send raw files
         if (fileInputRef.current) fileInputRef.current.value = ''
       } catch (err) {
